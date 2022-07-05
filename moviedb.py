@@ -5,7 +5,7 @@ from PIL import Image
 if sys.platform == "win32":
     os.environ["PATH"] = os.environ["PATH"] + ";" + os.path.dirname(os.path.realpath(__file__))
 
-def walklevel(some_dir, level=1):
+def walklevel(some_dir, level=1): # функция рекурсивного прохождения по директории, аргументы функции - путь, 
     some_dir = some_dir.rstrip(os.path.sep)
     assert os.path.isdir(some_dir)
     num_sep = some_dir.count(os.path.sep)
@@ -15,9 +15,9 @@ def walklevel(some_dir, level=1):
         if num_sep + level <= num_sep_this:
             del dirs[:]
 
-def export( conn, path ) :
+def export( conn, path ) : # функция экспорта бд в файл с расширением .csv, аргументы функции - подключение к бд, название файла, в который нужно экспортировать бд
     try :
-        with open(path, 'w', newline='') as csvfile:
+        with open(path, 'w', newline='') as csvfile: # открыть файл на перезапись
             writer = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             writer.writerow( ["Директория", "Имя", "Размер", "Длительность", "Количество видеопотоков", "Количество аудиопотоков", "Количество субтитров", "Кодек"] )
             cursor = conn.cursor()
@@ -42,9 +42,9 @@ def clear(conn) :
             cursor.execute( "DELETE FROM file WHERE path=? AND name=?", (path, name) )
             conn.commit()
 
-def scan(conn, base_path, *, depth=10, types=[".mp4", ".m4v", ".mpg", ".mkv", ".avi"] ) :
-    if not os.path.exists( base_path ) :
-        print( "No such directory" )
+def scan(conn, base_path, *, depth=10, types=[".mp4", ".m4v", ".mpg", ".mkv", ".avi"] ) : # функция сканирования директории, аргументы функции - подключение к бд, путь, глубина сканирования, типы данных
+    if not os.path.exists( base_path ) : # если введенной директории не существует
+        print( "No such directory" )  
         return
     for path, dirs, files in walklevel( base_path, depth ) :
         for file in files :
@@ -130,20 +130,20 @@ if __name__ == "__main__" :
     parser.add_argument('--path', dest='path', default=None, action='store', help='Path to scanning directory') # сканирование директории
     parser.add_argument('--export', dest='export', default=None, action='store', help='Export database as CSV file') # экспорт базы данных как файла с расширением csv
     parser.add_argument('--database', dest='database', default='moviedb.sqlite3', action='store', help='Path to database') # путь к базе данных
-    parser.add_argument('--clear', dest='clear', action='store_const', const=True, help='Remove all unexists files from database') # ужалить все несуществующие файлы из базы данных
+    parser.add_argument('--clear', dest='clear', action='store_const', const=True, help='Remove all unexists files from database') # удалить все несуществующие файлы из базы данных
     parser.add_argument('--files', dest='files', default="mp4,m4v,mpg,mkv,avi", action='store', help='Scanning files types') # типы (расширения) сканируемых файлов
     parser.add_argument('--depth', dest='depth', default=10, type=int, action='store', help='Scanning directory depth') # указать глубину сканирования директории
 
-    args = vars( parser.parse_args( sys.argv[1:] ) )
+    args = vars( parser.parse_args( sys.argv[1:] ) ) # словарь с аргументами "path", "export", "database", "clear", "files", "depth"
 
-    if not os.path.exists( args["database"] ) :
-        with open( os.path.join(os.path.dirname(os.path.realpath(__file__)), "moviedb.sql") ) as p :
-            script = p.read().split( ";" )
-        conn = sqlite3.connect(args["database"])
-        [ conn.cursor().execute( i ) for i in script ]
-        conn.commit()
-    else :
-        conn = sqlite3.connect(args["database"])
+    if not os.path.exists( args["database"] ) : # проверка на существование пути к базе данных (если такой бд не существует)
+        with open( os.path.join(os.path.dirname(os.path.realpath(__file__)), "moviedb.sql") ) as p : # открыть файл 'путь до текущей директории' + 'название по умолчанию'
+            script = p.read().split( ";" ) # выполнение инструкций создания бд из файла moviedb.sql по блокам, разделенными ";"
+        conn = sqlite3.connect(args["database"])  # присвоение переменной conn подключения к бд
+        [ conn.cursor().execute( i ) for i in script ] # построитель списка, каждый элемент - выполнение инструкции conn.cursor().execute(i)
+        conn.commit() # применение изменений
+    else : # если бд существует
+        conn = sqlite3.connect(args["database"]) # присвоение переменной conn подключения к бд
 
     if args["path"] :
         types = [ "." + ext.strip() for ext in args["files"].split(",") ]
